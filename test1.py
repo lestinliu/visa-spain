@@ -6,6 +6,8 @@ from gmm import Email
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.options import Options
 
+TIMEOUT = 300
+
 options = Options()
 # options.add_argument('--headless')
 driver = webdriver.Chrome(options=options)
@@ -15,7 +17,7 @@ driver.get("https://blsspain-belarus.com/book_appointment.php")
 FIRST_NAME = "SEMCHANKA"
 LAST_NAME = "VASILI"
 PASSPORT_NUM = "MP4019821"
-EMAIL = "alex22012019@gmail.com"
+EMAIL = "alex23012019@gmail.com"
 PHONE = "296903657"
 DOB = "28/04/1977"
 PASSPORT_ISSUE_DATE = "26/06/2017"
@@ -158,6 +160,18 @@ TIME = "09:00 - 09:30"
 
 
 # select centre
+DOB_YEAR = DOB.split("/")[0]
+DOB_MONTH = DOB.split("/")[1]
+DOB_DAY = DOB.split("/")[2]
+
+ISSUED_YEAR = PASSPORT_ISSUE_DATE.split("/")[0]
+ISSUED_MONTH = PASSPORT_ISSUE_DATE.split("/")[1]
+ISSUED_DAY = PASSPORT_ISSUE_DATE.split("/")[2]
+
+EXPIRED_YEAR = PASSPORT_EXPIRE_DATE.split("/")[0]
+EXPIRED_MONTH = PASSPORT_EXPIRE_DATE.split("/")[1]
+EXPIRED_DAY = PASSPORT_EXPIRE_DATE.split("/")[2]
+
 
 def click_el(element):
     hover = ActionChains(driver).move_to_element(element)
@@ -173,24 +187,41 @@ def random_with_N_digits(n):
 
 random_with_N_digits(4)
 
+# select centre
 driver.execute_script("setCookie();")
 click_el(driver.find_element_by_xpath("//select[@name='centre']"))
 click_el(driver.find_element_by_xpath("//select[@name='centre']/option[text()='Minsk']"))
 click_el(driver.find_element_by_xpath("//select[@name='category']"))
 click_el(driver.find_element_by_xpath("//select[@name='category']/option[text()='Normal']"))
 
-
+# enter phone
 driver.find_element_by_id("phone").send_keys(PHONE)
 driver.find_element_by_id("email").send_keys(EMAIL)
-driver.find_element_by_id("otp").send_keys(random_with_N_digits(4))
-click_el(driver.find_element_by_name("save"))
-driver.execute_script("sendOTP();")
-time.sleep(5)
 
-mail = Email()
-key = mail.read_email(EMAIL, "Ab123456!")
+# enter wrong code
+def enter_wrong_code():
+    driver.find_element_by_id("otp").clear()
+    driver.find_element_by_id("otp").send_keys(random_with_N_digits(4))
+    click_el(driver.find_element_by_name("save"))
+    driver.execute_script("sendOTP();")
+    time.sleep(3)
+
+
+# check mail
+def get_code_from_email():
+    mail = Email()
+    if mail.read_email(EMAIL, "Ab123456!"):
+        return mail.read_email(EMAIL, "Ab123456!")
+    else:
+        print(datetime.datetime.now().time(), "no email")
+        enter_wrong_code()
+        time.sleep(TIMEOUT)
+        get_code_from_email()
+
+enter_wrong_code()
+
 driver.find_element_by_id("otp").clear()
-driver.find_element_by_id("otp").send_keys(key)
+driver.find_element_by_id("otp").send_keys(get_code_from_email())
 click_el(driver.find_element_by_name("save"))
 
 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -218,7 +249,7 @@ while True:
     for i in dates:
         print(i.text, i.get_attribute("class"))
     print(datetime.datetime.now().time())
-    time.sleep(300)
+    time.sleep(TIMEOUT)
     driver.refresh()
 
 click_el(driver.find_element_by_id("app_date"))
@@ -239,58 +270,66 @@ click_el(driver.find_element_by_xpath(
 click_el(driver.find_element_by_xpath("//select[@id='VisaTypeId']"))
 click_el(driver.find_element_by_xpath("//select[@id='VisaTypeId']/option[text()='Tourism']"))
 
-driver.find_element_by_id("first_name").send_keys("Vlad")
-driver.find_element_by_id("last_name").send_keys("Serov")
+driver.find_element_by_id("first_name").send_keys(FIRST_NAME)
+driver.find_element_by_id("last_name").send_keys(LAST_NAME)
 
+years_back = (2019 - int(DOB_YEAR)) // 10
+while years_back:
+    years_back -= 1
+    click_el(driver.find_element_by_xpath("//div[@class = 'datepicker-years']//th[@class = 'prev']"))
 click_el(driver.find_element_by_id("dateOfBirth"))
+
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-years']//span[not(contains(@class, 'disabled')) and text()='2009']"))
+    "//div[@class='datepicker-years']//span[not(contains(@class, 'disabled')) and text()='{}']".format(DOB_YEAR)))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-months']//span[text()='Jan']"))
+    "//div[@class='datepicker-months']//span[text()='{}']".format(DOB_MONTH)))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='30']"))
+    "//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='{}']".format(
+        DOB_DAY)))
 
 click_el(driver.find_element_by_xpath("//select[@id='passportType']"))
 click_el(driver.find_element_by_xpath("//select[@id='passportType']/option[@value='01']"))
 
-driver.find_element_by_id("passport_no").send_keys("Ab1233445")
+driver.find_element_by_id("passport_no").send_keys(PASSPORT_NUM)
 
 click_el(driver.find_element_by_id("pptIssueDate"))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-years']//span[not(contains(@class, 'disabled')) and text()='2017']"))
+    "//div[@class='datepicker-years']//span[not(contains(@class, 'disabled')) and text()='{}']".format(ISSUED_YEAR)))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-months']//span[text()='Jan']"))
+    "//div[@class='datepicker-months']//span[text()='{}']".format(ISSUED_MONTH)))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='30']"))
+    "//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='{}']".format(
+        ISSUED_DAY)))
 
 click_el(driver.find_element_by_id("pptExpiryDate"))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-years']//span[not(contains(@class, 'disabled')) and text()='2020']"))
+    "//div[@class='datepicker-years']//span[not(contains(@class, 'disabled')) and text()='{}']".format(EXPIRED_YEAR)))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-months']//span[text()='Jan']"))
+    "//div[@class='datepicker-months']//span[text()='{}']".format(EXPIRED_MONTH)))
 click_el(driver.find_element_by_xpath(
-    "//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='30']"))
+    "//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='{}']".format(
+        EXPIRED_DAY)))
 
-driver.find_element_by_id("pptIssuePalace").send_keys("Ивацевичи")
+driver.find_element_by_id("pptIssuePalace").send_keys(NATIONALITY)
 # click_el(driver.find_element_by_id("courierId"))  # courier
 # click_el(driver.find_element_by_id("vasId12"))  # sms
 # click_el(driver.find_element_by_id("vasId6"))  # form filling
 # click_el(driver.find_element_by_id("vasId5"))  # photo
 # click_el(driver.find_element_by_id("vasId2"))  # prime time
+time.sleep(10)
 driver.find_element_by_id("captcha").send_keys("12345")  # prime time
 
-time.sleep(30)
-click_el(driver.find_element_by_xpath("//input[@name='save']"))
-
-alert = driver.switch_to.alert
-alert.accept()
-
-reg_no = driver.find_element_by_xpath("//td[contains(text(), 'Регистрационный номер')]").text
-print(reg_no)
-info = driver.find_element_by_xpath("//img[@class = 'barcode']/../..").text
-print(info)
-
-click_el(driver.find_element_by_xpath("//div[text()='EMAIL']"))
-
-alert = driver.switch_to.alert
-alert.accept()
+# click_el(driver.find_element_by_xpath("//input[@name='save']"))
+#
+# alert = driver.switch_to.alert
+# alert.accept()
+#
+# reg_no = driver.find_element_by_xpath("//td[contains(text(), 'Регистрационный номер')]").text
+# print(reg_no)
+# info = driver.find_element_by_xpath("//img[@class = 'barcode']/../..").text
+# print(info)
+#
+# click_el(driver.find_element_by_xpath("//div[text()='EMAIL']"))
+#
+# alert = driver.switch_to.alert
+# alert.accept()
