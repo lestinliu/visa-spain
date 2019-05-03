@@ -185,8 +185,6 @@ def random_with_N_digits(n):
     return randint(range_start, range_end)
 
 
-random_with_N_digits(4)
-
 # select centre
 driver.execute_script("setCookie();")
 click_el(driver.find_element_by_xpath("//select[@name='centre']"))
@@ -210,8 +208,9 @@ def enter_wrong_code():
 # check mail
 def get_code_from_email():
     mail = Email()
-    if mail.read_email(EMAIL, "Ab123456!"):
-        return mail.read_email(EMAIL, "Ab123456!")
+    code = mail.read_email(EMAIL, "Ab123456!")
+    if code:
+        return code
     else:
         print(datetime.datetime.now().time(), "no email")
         enter_wrong_code()
@@ -228,15 +227,42 @@ driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 click_el(driver.find_element_by_name("agree"))
 
 # select slot
+
 while True:
     click_el(driver.find_element_by_id("app_date"))
     dates = driver.find_elements_by_xpath(
         "//div[@class='datepicker-days']"
         "//td[not(@class='disabled')"
         " and not(@class='old disabled day disabled')"
+        " and not(@class='old active day disabled fullcapspecial')"
+        " and not(@class='old day disabled fullcapspecial')"
         " and not(@class='disabled day disabled')"
         " and not(@class='disabled day disabled')"
         " and not(@class='day disabled fullcapspecial')"
+        " and not(@class='day disabled inactiveClass')"
+        " and not(@class='new day disabled fullcapspecial')"
+        " and not(@class='active day disabled fullcapspecial')"
+        " and not(@class='disabled day disabled inactiveClass')"
+        " and not(@class='active day disabled fullcap')"
+        " and not(@class='day disabled fullcap')"
+        " and not(@class='day disabled offday')"
+        " and not(@class='new day disabled inactiveClass')"
+        " and not(@class='new day disabled offday')"
+        " and not(@class='new disabled day disabled')]")
+    for i in dates:
+        print(i.text, i.get_attribute("class"))
+    # next month
+    click_el(driver.find_element_by_xpath("//div[@class = 'datepicker-days']//th[@class = 'next']"))
+    dates = driver.find_elements_by_xpath(
+        "//div[@class='datepicker-days']"
+        "//td[not(@class='disabled')"
+        " and not(@class='old disabled day disabled')"
+        " and not(@class='old active day disabled fullcapspecial')"
+        " and not(@class='old day disabled fullcapspecial')"
+        " and not(@class='disabled day disabled')"
+        " and not(@class='disabled day disabled')"
+        " and not(@class='day disabled fullcapspecial')"
+        " and not(@class='day disabled inactiveClass')"
         " and not(@class='new day disabled fullcapspecial')"
         " and not(@class='active day disabled fullcapspecial')"
         " and not(@class='disabled day disabled inactiveClass')"
