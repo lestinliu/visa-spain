@@ -35,41 +35,44 @@ people = {1: [
 
 person = people[1][0]
 
+def get_date_from_string(str_date):
+    return datetime.datetime.strptime(str_date, '%b %d %Y').date()
+
 FIRST_NAME = person["FIRST_NAME"]
 LAST_NAME = person["LAST_NAME"]
 PASSPORT_NUM = person["PASSPORT_NUM"]
-DOB = person["DOB"]
-PASSPORT_ISSUE_DATE = person["PASSPORT_ISSUE_DATE"]
-PASSPORT_EXPIRE_DATE = person["PASSPORT_EXPIRE_DATE"]
+DOB = get_date_from_string(person["DOB"])
+PASSPORT_ISSUE_DATE = get_date_from_string(person["PASSPORT_ISSUE_DATE"])
+PASSPORT_EXPIRE_DATE = get_date_from_string(person["PASSPORT_EXPIRE_DATE"])
 NATIONALITY = person["NATIONALITY"]
-TRAVEL_DATE = person["TRAVEL_DATE"]
-DATE_FROM = person["DATE_FROM"]
-DATE_TO = person["DATE_TO"]
+TRAVEL_DATE = get_date_from_string(person["TRAVEL_DATE"])
+DATE_FROM = get_date_from_string(person["DATE_FROM"])
+DATE_TO = get_date_from_string(person["DATE_TO"])
 
 # select centre
-DOB_YEAR = int(DOB.split("/")[0])
-DOB_MONTH = int(DOB.split("/")[1])
-DOB_DAY = int(DOB.split("/")[2])
+DOB_YEAR = DOB.year
+DOB_MONTH = DOB.month
+DOB_DAY = DOB.day
 
-ISSUED_YEAR = int(PASSPORT_ISSUE_DATE.split("/")[0])
-ISSUED_MONTH = int(PASSPORT_ISSUE_DATE.split("/")[1])
-ISSUED_DAY = int(PASSPORT_ISSUE_DATE.split("/")[2])
+ISSUED_YEAR = PASSPORT_ISSUE_DATE.year
+ISSUED_MONTH = PASSPORT_ISSUE_DATE.month
+ISSUED_DAY = PASSPORT_ISSUE_DATE.day
 
-EXPIRED_YEAR = int(PASSPORT_EXPIRE_DATE.split("/")[0])
-EXPIRED_MONTH = int(PASSPORT_EXPIRE_DATE.split("/")[1])
-EXPIRED_DAY = int(PASSPORT_EXPIRE_DATE.split("/")[2])
+EXPIRED_YEAR = PASSPORT_EXPIRE_DATE.year
+EXPIRED_MONTH = PASSPORT_EXPIRE_DATE.month
+EXPIRED_DAY = PASSPORT_EXPIRE_DATE.day
 
-TRAVEL_YEAR = int(TRAVEL_DATE.split("/")[0])
-TRAVEL_MONTH = int(TRAVEL_DATE.split("/")[1])
-TRAVEL_DAY = int(TRAVEL_DATE.split("/")[2])
+TRAVEL_YEAR = TRAVEL_DATE.year
+TRAVEL_MONTH = TRAVEL_DATE.month
+TRAVEL_DAY = TRAVEL_DATE.day
 
-DATE_FROM_YEAR = int(DATE_FROM.split("/")[0])
-DATE_FROM_MONTH = int(DATE_FROM.split("/")[1])
-DATE_FROM_DAY = int(DATE_FROM.split("/")[2])
+DATE_FROM_YEAR = DATE_FROM.year
+DATE_FROM_MONTH = DATE_FROM.month
+DATE_FROM_DAY = DATE_FROM.day
 
-DATE_TO_YEAR = int(DATE_TO.split("/")[0])
-DATE_TO_MONTH = int(DATE_TO.split("/")[1])
-DATE_TO_DAY = int(DATE_TO.split("/")[2])
+DATE_TO_YEAR = DATE_TO.year
+DATE_TO_MONTH = DATE_TO.month
+DATE_TO_DAY = DATE_TO.day
 
 options = Options()
 # options.add_argument('--headless')
