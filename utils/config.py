@@ -8,3 +8,4 @@ GOOGLE_AUTH_SCOPES = ['https://spreadsheets.google.com/feeds', 'https://www.goog
 
 EMAIL = "alex23012019@gmail.com"
 PHONE = "296903657"
+TIMEOUT = 300

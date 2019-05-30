@@ -1,8 +1,7 @@
 import json
-import re
 from datetime import datetime
 
-from person import Person
+from model.person import Person
 from utils import captcha
 from utils.gmm import Email
 from selenium.webdriver import ActionChains
@@ -12,15 +11,15 @@ import time
 from utils.basic import Basic
 from utils.google_sheet import GoogleSheets
 
-TIMEOUT = 300
-
 
 class Visa(Basic):
 
     def __init__(self, driver):
         self.driver = driver
         self.gs = GoogleSheets()
-        self.google_sheet = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa")
+        self.gs_visa_tab = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa")
+        self.gs_account_tab = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "accounts")
+        self.gs_dates_tab = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "dates")
 
     def click_el(self, xpath):
         element = self.driver.find_element_by_xpath(xpath)
@@ -86,12 +85,12 @@ class Visa(Basic):
             else:
                 break
 
-        print("available:", available_dates)
+        print("{}: available: {}".format(datetime.now(), available_dates))
         return available_dates
 
     def fill_appintment_date(self, date):
         self.click_el("//input[@id = 'app_date']")
-        print("date", date)
+        # print("date", date)
         month_el = datetime.strptime(
             self.driver.find_element_by_xpath("//div[@class='datepicker-days']//th[@class='datepicker-switch']").text,
             '%B %Y')
@@ -109,7 +108,6 @@ class Visa(Basic):
                 "//div[@class='datepicker-days']//th[@class='datepicker-switch']")
             for date in self.driver.find_elements_by_xpath(normal_dates_xpath):
                 found_date_str = date.text + " " + found_month.text
-                print(found_date_str)
                 found_date = datetime.strptime(found_date_str, '%d %B %Y').date()
                 result_dates.append(found_date)
 
@@ -153,7 +151,7 @@ class Visa(Basic):
     # format (02 8 2019)
     def fill_travel_date(self, date):
         self.click_el("//input[@id = 'travelDate']")
-        print("date", date)
+        # print("date", date)
         month_el = datetime.strptime(
             self.driver.find_element_by_xpath("//div[@class='datepicker-days']//th[@class='datepicker-switch']").text,
             '%B %Y')
@@ -277,10 +275,12 @@ class Visa(Basic):
         # nationality
         self.driver.find_element_by_id("pptIssuePalace").send_keys(person.nationality)
 
-    def register_people_for_dates(self, dates):
+    def save_available_dates(self, available_dates):
+        self.gs_dates_tab.update_acell("B1", "{}".format(available_dates))
 
+    def register_people_for_dates(self, dates):
         for date in dates:
-            filtered = self.gs.filter_visa_with_appropriate_date(json.dumps(self.google_sheet.get_all_records()), date)
+            filtered = self.gs.filter_visa_with_appropriate_date(json.dumps(self.gs_visa_tab.get_all_records()), date)
             if filtered:
                 for p in filtered:
                     self.open_page("https://blsspain-belarus.com/book_appointment.php")
@@ -291,8 +291,8 @@ class Visa(Basic):
                     self.register_person_for_date(p, date)
                     reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
                     print(reg_number)
-                    self.gs.update_visa_item_by_id(self.google_sheet, p["id"], "status", "done")
-                    self.gs.update_visa_item_by_id(self.google_sheet, p["id"], "script_comment", reg_number)
+                    self.gs.update_visa_item_by_id(self.gs_visa_tab, p["id"], "status", datetime.now())
+                    self.gs.update_visa_item_by_id(self.gs_visa_tab, p["id"], "script_comment", reg_number)
             print("filtered for {} is {}".format(date, filtered))
 
     def register_person_for_date(self, p, date):
@@ -305,7 +305,6 @@ class Visa(Basic):
         self.fill_other_fields(person)
         self.fill_captcha()
         self.submit_form()
-
 
     def open_new_tab(self, param):
         self.driver.execute_script("window.open('https://www.google.com/search?q={}');".format(param))
