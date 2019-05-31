@@ -2,7 +2,7 @@ import time
 
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-from model.visa import Visa
+from visa import Visa
 from utils import config
 
 options = Options()
@@ -12,7 +12,9 @@ driver.implicitly_wait(1)
 
 visa = Visa(driver)
 
+
 def go_to_select_date_page():
+    visa.fill_emails()
     visa.open_page("https://blsspain-belarus.com/book_appointment.php")
     visa.select_centre("Minsk", "Normal")
     visa.enter_phone_and_email(config.PHONE, config.EMAIL)
@@ -20,16 +22,14 @@ def go_to_select_date_page():
     visa.enter_code_from_email(config.EMAIL)  # Иногда приходит письмо с security alert и не читается код
 
 
-def monitor_dates(timeout):
+def register_people(timeout):
     try:
         while True:
-            visa.save_available_dates(visa.wait_for_available_dates())
-            time.sleep(timeout)
+            visa.register_people_for_dates(visa.wait_for_available_dates())
     except:
-        driver.quit()
         go_to_select_date_page()
-        monitor_dates(timeout)
+        register_people(timeout)
 
 
 go_to_select_date_page()
-monitor_dates(config.TIMEOUT)
+register_people(config.TIMEOUT)

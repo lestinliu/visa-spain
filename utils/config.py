@@ -7,5 +7,6 @@ GOOGLE_API_PROJECT = "resources/My Project-33d997896874.json"
 GOOGLE_AUTH_SCOPES = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 
 EMAIL = "alex23012019@gmail.com"
+MAX_EMAILS = 3
 PHONE = "296903657"
-TIMEOUT = 300
+TIMEOUT = 30

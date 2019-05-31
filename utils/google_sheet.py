@@ -60,15 +60,12 @@ class GoogleSheets:
         input_dict = json.loads(ls)
         output_dict = [x for x in input_dict if datetime.datetime.strptime(x["start_date"], '%d/%m/%Y').date()
                        <= date
-                       <= datetime.datetime.strptime(x["end_date"], '%d/%m/%Y').date() and x["status"] != "done"]
-        print("output_dict: ", output_dict)
+                       <= datetime.datetime.strptime(x["end_date"], '%d/%m/%Y').date() and not x["status"]]
         return output_dict
 
     def find_visa_item_by_id(self, spread_sheet, visa_item_id):
         cell = spread_sheet.row_values(visa_item_id + 1)
-        print("cell", cell)
         return cell
 
     def update_visa_item_by_id(self, spread_sheet, id, column, value):
-        print("{}{}".format(self.visa_columns[column], int(id) + 1))
         spread_sheet.update_acell("{}{}".format(self.visa_columns[column], int(id) + 1), value)
