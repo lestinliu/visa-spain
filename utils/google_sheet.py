@@ -58,9 +58,11 @@ class GoogleSheets:
 
     def filter_visa_with_appropriate_date(self, ls, date):
         input_dict = json.loads(ls)
-        output_dict = [x for x in input_dict if datetime.datetime.strptime(x["start_date"], '%d/%m/%Y').date()
+
+        output_dict = [x for x in input_dict if
+                       not x["status"] and datetime.datetime.strptime(x["start_date"], '%d/%m/%Y')
                        <= date
-                       <= datetime.datetime.strptime(x["end_date"], '%d/%m/%Y').date() and not x["status"]]
+                       <= datetime.datetime.strptime(x["end_date"], '%d/%m/%Y')]
         return output_dict
 
     def find_visa_item_by_id(self, spread_sheet, visa_item_id):

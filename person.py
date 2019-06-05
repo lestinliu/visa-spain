@@ -2,9 +2,9 @@ from utils.basic import Basic
 
 
 class Person(Basic):
-    def __init__(self, id, type, last_name, first_name, passport, birth_date, passport_issued, passport_expired,
+    def __init__(self, driver, id, type, last_name, first_name, passport, birth_date, passport_issued, passport_expired,
                  issued_by, phone: int, nationality, travel_date, start_date, end_date, family, status, script_comment,
-                 email, driver):
+                 email):
         super().__init__(driver)
         self.id = id
         self.type = type

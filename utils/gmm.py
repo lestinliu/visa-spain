@@ -1,26 +1,34 @@
 import datetime
 import imaplib, email
+import quopri
 import re
 
 
 class Email:
 
-    def read_email(self, username, password):
-        mail = imaplib.IMAP4_SSL('imap.gmail.com')
+    def make_seen(self, username, password):
+        mail = imaplib.IMAP4_SSL('imap.{}'.format(username.split("@")[1]))
         mail.login(username, password)
         mail.list()
         mail.select('inbox')
         result, data = mail.uid('search', None, "UNSEEN")  # (ALL/UNSEEN)
-        i = len(data[0].split())
-        found = ""
+        i = len(data[0].split())  # emails count
+        for x in range(i):
+            latest_email_uid = data[0].split()[x]
+            mail.uid('fetch', latest_email_uid, '(RFC822)')
 
+    def read_email(self, username, password):
+        mail = imaplib.IMAP4_SSL('imap.{}'.format(username.split("@")[1]))
+        mail.login(username, password)
+        mail.list()
+        mail.select('inbox')
+        result, data = mail.uid('search', None, "UNSEEN")  # (ALL/UNSEEN)
+        i = len(data[0].split())  # emails count
+        found = ""
         for x in range(i):
             latest_email_uid = data[0].split()[x]
             result, email_data = mail.uid('fetch', latest_email_uid, '(RFC822)')
-            # result, email_data = conn.store(num,'-FLAGS','\\Seen')
-            # this might work to set flag to seen, if it doesn't already
-            raw_email = email_data[0][1]
-            raw_email_string = raw_email.decode('utf-8')
+            raw_email_string = email_data[0][1].decode('utf-8')
             email_message = email.message_from_string(raw_email_string)
 
             # Header Details
@@ -32,14 +40,16 @@ class Email:
             email_to = str(email.header.make_header(email.header.decode_header(email_message['To'])))
             subject = str(email.header.make_header(email.header.decode_header(email_message['Subject'])))
             # Body details
-            for part in email_message.walk():
-                print(subject)
-                if part.get_content_type() == "text/html":
-                    body = part.get_payload(decode=True)
-                    m = re.search('Verification code - (.+?)<br', body.decode('utf-8'))
-                    found = m.group(1)
-                    break
-                else:
-                    continue
+            if subject == "Email verification":
+                for part in email_message.walk():
+                    print(subject)
+                    if part.get_content_type() == "text/html":
+                        body = part.get_payload(decode=True)
+                        m = re.search('Verification code - (.+?)<br', body.decode('utf-8'))
+                        found = m.group(1)
+                        break
+                    else:
+                        continue
+                break
         print("found: ", found)
         return found

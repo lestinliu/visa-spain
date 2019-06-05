@@ -1,11 +1,11 @@
 import json
+import pickle
 from datetime import datetime
 
 from person import Person
 from utils import captcha
 from utils.gmm import Email
 from utils import config
-from selenium.webdriver import ActionChains
 from io import BytesIO
 from PIL import Image
 import time
@@ -26,6 +26,7 @@ class Visa(Basic):
         self.driver.execute_script("setCookie();")
         self.click_el(name="centre")
         self.click_el(xpath="//select[@name='centre']/option[text()='{}']".format(city))
+        self.wait_for_loading()
         self.click_el(name="category")
         self.click_el(xpath="//select[@name='category']/option[text()='{}']".format(category))
 
@@ -34,9 +35,11 @@ class Visa(Basic):
         self.enter_message(phone, id="phone")
         self.enter_message(email, id="email")
 
-    def enter_wrong_code(self):
+    def enter_wrong_code(self, username, password):
         self.enter_message(self.random_with_n_digits(4), id="otp")
         self.click_el(name="save")
+        email = Email()
+        email.make_seen(username, password)
         self.driver.execute_script("sendOTP();")
         time.sleep(3)
 
@@ -44,12 +47,12 @@ class Visa(Basic):
     def get_code_from_email(self, email):
         time.sleep(3)  # get code from email
         mail = Email()
-        code = mail.read_email(email, "Ab123456!")
+        code = mail.read_email(email, config.PASSWORD)
         if code:
             return code
         else:
             print(datetime.now().time(), "no email")
-            self.enter_wrong_code()
+            self.enter_wrong_code(email, config.PASSWORD)
             self.get_code_from_email(email)
 
     def enter_code_from_email(self, email):
@@ -77,7 +80,7 @@ class Visa(Basic):
         return available_dates
 
     def fill_appintment_date(self, date):
-        self.click_el(id="app_dae")
+        self.click_el(id="app_date")
         month_el = datetime.strptime(
             self.driver.find_element_by_xpath("//div[@class='datepicker-days']//th[@class='datepicker-switch']").text,
             '%B %Y')
@@ -94,10 +97,8 @@ class Visa(Basic):
             found_month = self.driver.find_element_by_xpath(
                 "//div[@class='datepicker-days']//th[@class='datepicker-switch']")
             for date in self.driver.find_elements_by_xpath(normal_dates_xpath):
-                found_date_str = date.text + " " + found_month.text
-                found_date = datetime.strptime(found_date_str, '%d %B %Y').date()
-                result_dates.append(found_date)
-
+                found_date = datetime.strptime(date.text + " " + found_month.text, '%d %B %Y')
+                result_dates.append(found_date.strftime("%d/%m/%Y"))
         return result_dates
 
     def wait_for_available_dates(self):
@@ -252,15 +253,22 @@ class Visa(Basic):
             xpath="//div[@class='datepicker-days']//td[not(@class='new day') and not(@class='old day') and text()='{}']"
                 .format(person.passport_expired.day))
         # nationality
-        self.enter_message(person.nationality, id="pptIssuePalace")
+        self.driver.find_element_by_xpath(
+            "//select[@name='nationalityId']/option[contains(text(),'{}')]".format(person.nationality)).click()
 
-    def save_available_dates(self, available_dates):
-        index = 1
-        sheet = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "dates")
-        sheet.clear()
-        for date in available_dates:
-            sheet.update_acell("A{}".format(index), date.strftime("%m/%d/%Y"))
-            index = index + 1
+        self.enter_message(person.issued_by, id="pptIssuePalace")
+
+    def write_available_dates(self, available_dates):
+        with open("resources/date.txt", 'wb') as f:
+            pickle.dump(available_dates, f)
+
+    def read_available_dates(self):
+        with open("resources/date.txt", 'rb') as f:
+            my_list = pickle.load(f)
+        dates = []
+        for str_date in my_list:
+            dates.append(datetime.strptime(str_date, "%d/%m/%Y"))
+        return dates
 
     def fill_emails(self):
         accounts = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "accounts")
@@ -272,29 +280,36 @@ class Visa(Basic):
                         visa.update_acell("R{}".format(person["id"] + 1), account["email"])
                         break
 
+    def go_to_select_date_page(self, phone, email):
+        self.fill_emails()
+        self.open_page("https://blsspain-belarus.com/book_appointment.php")
+        self.select_centre("Minsk", "Normal")
+        self.enter_phone_and_email(phone, email)
+        self.enter_wrong_code(email, config.PASSWORD)
+        self.enter_code_from_email(email)
+
     def register_people_for_dates(self, dates):
         for date in dates:
+            print("date:", date.strftime("%d/%m/%Y"))
             filtered = self.gs.filter_visa_with_appropriate_date(json.dumps(
                 self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa").get_all_records()), date)
             if filtered:
                 for p in filtered:
-                    self.open_page("https://blsspain-belarus.com/book_appointment.php")
-                    self.select_centre("Minsk", "Normal")
-                    self.enter_phone_and_email(p["phone"], p["email"])
-                    self.enter_wrong_code()
-                    self.enter_code_from_email(p["email"])  # Иногда приходит письмо с security alert и не читается код
-                    self.register_person_for_date(p, date)
+                    self.go_to_select_date_page(p["phone"], p["email"])
+                    self.register_person_for_date(self.driver, p, date)
                     reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
                     self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
-                                                   p["id"], "status", "{}".format(datetime.now().strftime("%d/%m/%Y %H:%M")))
-                    self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                                    p["id"], "script_comment", reg_number)
+                    self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
+                                                   p["id"], "status", date.strftime("%d/%m/%Y"))
+                    self.driver.execute_script("document.title = '{}'".format(reg_number))
+                    self.driver.execute_script('window.print();')
 
-    def register_person_for_date(self, p, date):
-        person = Person(
-            p["id"], p["type"], p["last_name"], p["first_name"], p["passport"], p["birth_date"],
-            p["passport_issued"], p["passport_expired"], p["issued_by"], p["phone"], p["nationality"],
-            p["travel_date"], p["start_date"], p["end_date"], p["family"], p["status"], p["script_comment"], p["email"])
+    def register_person_for_date(self, driver, p, date):
+        person = Person(driver, p["id"], p["type"], p["last_name"], p["first_name"], p["passport"], p["birth_date"],
+                        p["passport_issued"], p["passport_expired"], p["issued_by"], p["phone"], p["nationality"],
+                        p["travel_date"], p["start_date"], p["end_date"], p["family"], p["status"], p["script_comment"],
+                        p["email"])
         self.fill_appintment_date(date)
         self.fill_other_fields(person)
         self.fill_captcha()

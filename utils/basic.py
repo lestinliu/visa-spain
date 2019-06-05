@@ -34,6 +34,9 @@ class Basic:
             locator = (By.XPATH, "//*[contains(text(), '{}')]".format(text))
         WebDriverWait(self.driver, 10).until(ec.element_to_be_clickable(locator), message="No element").click()
 
+    def wait_for_loading(self):
+        WebDriverWait(self.driver, 10).until(ec.invisibility_of_element_located((By.ID, "overlay")))
+
     def enter_message(self, message, xpath=None, id=None, name=None, text=None):
         if xpath:
             locator = (By.XPATH, xpath)
