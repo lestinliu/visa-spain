@@ -79,7 +79,18 @@ class Visa(Basic):
                 break
         return available_dates
 
-    def fill_appintment_date(self, date):
+    def get_available_people(self):
+        visa = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa")
+        available_people = {}
+        for person in visa.get_all_records():
+            if not person["script_comment"] and not person["status"]:
+                family = str(person["family"])
+                if family not in available_people:
+                    available_people[family] = []
+                available_people[family].append(person)
+        return available_people
+
+    def fill_appointment_date(self, date):
         self.click_el(id="app_date")
         month_el = datetime.strptime(
             self.driver.find_element_by_xpath("//div[@class='datepicker-days']//th[@class='datepicker-switch']").text,
@@ -92,23 +103,18 @@ class Visa(Basic):
 
     def get_normal_dates(self):
         normal_dates_xpath = "//div[@class='datepicker-days']//td[@class = 'day activeClass']"
-        result_dates = []
+        result_dates = {}
+        dates = []
         if len(self.driver.find_elements_by_xpath(normal_dates_xpath)):
             found_month = self.driver.find_element_by_xpath(
-                "//div[@class='datepicker-days']//th[@class='datepicker-switch']")
-            for date in self.driver.find_elements_by_xpath(normal_dates_xpath):
-                found_date = datetime.strptime(date.text + " " + found_month.text, '%d %B %Y')
-                result_dates.append(found_date.strftime("%d/%m/%Y"))
+                "//div[@class='datepicker-days']//th[@class='datepicker-switch']").text
+            for day in self.driver.find_elements_by_xpath(normal_dates_xpath):  # need refactor fix
+                dates.append(day.text)
+            for day in dates:
+                found_date = datetime.strptime(day + " " + found_month, '%d %B %Y')
+                result_dates[found_date.strftime("%d/%m/%Y")] = self.get_available_time(day)
+        print("RD:", result_dates)
         return result_dates
-
-    def wait_for_available_dates(self):
-        available_dates = self.get_available_dates()
-        if not available_dates:
-            time.sleep(3)
-            self.driver.refresh()
-            self.wait_for_available_dates()
-        else:
-            return available_dates
 
     def get_available_time(self, day):
         self.click_el(id="app_date")
@@ -258,17 +264,15 @@ class Visa(Basic):
 
         self.enter_message(person.issued_by, id="pptIssuePalace")
 
-    def write_available_dates(self, available_dates):
-        with open("resources/date.txt", 'wb') as f:
-            pickle.dump(available_dates, f)
-
     def read_available_dates(self):
-        with open("resources/date.txt", 'rb') as f:
-            my_list = pickle.load(f)
-        dates = []
-        for str_date in my_list:
-            dates.append(datetime.strptime(str_date, "%d/%m/%Y"))
-        return dates
+        with open('resources/dates.json', 'r') as f:
+            dates_dict = json.load(f)
+        return dates_dict
+
+    def read_available_people(self):
+        with open('resources/people.json', 'r') as f:
+            people_dict = json.load(f)
+        return people_dict
 
     def fill_emails(self):
         accounts = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "accounts")
@@ -288,29 +292,80 @@ class Visa(Basic):
         self.enter_wrong_code(email, config.PASSWORD)
         self.enter_code_from_email(email)
 
-    def register_people_for_dates(self, dates):
-        for date in dates:
-            print("date:", date.strftime("%d/%m/%Y"))
-            filtered = self.gs.filter_visa_with_appropriate_date(json.dumps(
-                self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa").get_all_records()), date)
-            if filtered:
-                for p in filtered:
-                    self.go_to_select_date_page(p["phone"], p["email"])
-                    self.register_person_for_date(self.driver, p, date)
-                    reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
-                    self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
-                                                   p["id"], "script_comment", reg_number)
-                    self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
-                                                   p["id"], "status", date.strftime("%d/%m/%Y"))
-                    self.driver.execute_script("document.title = '{}'".format(reg_number))
-                    self.driver.execute_script('window.print();')
+    def collect_people_for_dates(self, dates, people):
+        available_dates = {}
+        if people and dates:
+            for family in people:
+                if family == "0":
+                    for person in people[family]:
+                        start_date = datetime.strptime(person["start_date"], "%d/%m/%Y")
+                        end_date = datetime.strptime(person["end_date"], "%d/%m/%Y")
+                        for date in dates:  # dates = {'17/06/2019': ['12-13', '13-14'], ...}
+                            current_date = datetime.strptime(date, "%d/%m/%Y")
+                            if start_date <= current_date <= end_date:
+                                if not available_dates.get(date):
+                                    available_dates[date] = []
+                                available_dates[date].append(person)
+                                dates[date] = dates[date].pop(0)
+                                break
+                else:
+                    start_date = datetime.strptime(people[family][0]["start_date"], "%d/%m/%Y")
+                    end_date = datetime.strptime(people[family][0]["end_date"], "%d/%m/%Y")
+                    for date in dates:  # dates = {'17/06/2019': ['12-13', '13-14'], ...}
+                        current_date = datetime.strptime(date, "%d/%m/%Y")
+                        if start_date <= current_date <= end_date:
+                            time_list = dates[date]
+                            if len(time_list) >= len(family):  # if has enough time slots for family
+                                if not available_dates.get(date):
+                                    available_dates[date] = []
+                                for person in family:
+                                    available_dates[date].append(person)
+                                    time_list.pop(0)
+                                dates[date] = time_list
+                                break
+        with open('resources/dates.json', 'w') as fp:
+            json.dump(available_dates, fp)
+        return available_dates
 
-    def register_person_for_date(self, driver, p, date):
-        person = Person(driver, p["id"], p["type"], p["last_name"], p["first_name"], p["passport"], p["birth_date"],
+    def register_person_for_date(self, p, date):
+        person = Person(self.driver, p["id"], p["type"], p["last_name"], p["first_name"], p["passport"],
+                        p["birth_date"],
                         p["passport_issued"], p["passport_expired"], p["issued_by"], p["phone"], p["nationality"],
                         p["travel_date"], p["start_date"], p["end_date"], p["family"], p["status"], p["script_comment"],
                         p["email"])
-        self.fill_appintment_date(date)
+        self.fill_appointment_date(date)
         self.fill_other_fields(person)
         self.fill_captcha()
         self.submit_form()
+        reg_element = self.driver.find_elements_by_xpath("//tbody/tr[4]/td[2]")
+        if len(reg_element):
+            reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
+            self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
+                                           p["id"], "script_comment", reg_number)
+            self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
+                                           p["id"], "status", date.strftime("%d/%m/%Y"))
+            self.driver.execute_script("document.title = '{}'".format(reg_number))
+            self.driver.execute_script('window.print();')
+            return "🤑 id: {} is successfully registered. reg num: {}".format(p[id], reg_number.text)
+        else:
+            if len(self.driver.find_elements_by_xpath("//p")):
+                error = self.driver.find_element_by_xpath("//p").text
+            else:
+                error = "unknown error"
+            return "❌ id: {} is failed. Error message: {}".format(p[id], error)
+
+    def send_monitoring_message(self, bot, message):
+        if config.CURRENT_MONITORING_MESSAGE != message:
+            try:
+                bot.send_message(config.CHAT_ID, message)
+                config.CURRENT_MONITORING_MESSAGE = message
+            except:
+                pass
+
+    def send_register_message(self, bot, message):
+        if config.CURRENT_REGISTER_REGISTER != message:
+            try:
+                bot.send_message(config.CHAT_ID, message)
+                config.CURRENT_REGISTER_REGISTER = message
+            except:
+                pass

@@ -1,8 +1,12 @@
 import json
+import time
 
+import telebot
 from selenium import webdriver
 from visa import Visa
 from utils import config
+
+bot = telebot.TeleBot('803883229:AAHGFPQ1guQEZylgE0_IdErXrkUpfolhT-c')
 
 appState = {
     "recentDestinations": [
@@ -30,21 +34,29 @@ visa = Visa(driver)
 
 
 def go_to_select_date_page():
-    visa.fill_emails()
     visa.open_page("https://blsspain-belarus.com/book_appointment.php")
     visa.select_centre("Minsk", "Normal")
     visa.enter_phone_and_email(config.PHONE, config.EMAIL)
     visa.enter_wrong_code(config.EMAIL, config.PASSWORD)
-    visa.enter_code_from_email(config.EMAIL)  # Иногда приходит письмо с security alert и не читается код
+    visa.enter_code_from_email(config.EMAIL)
 
 
 def register_people(timeout):
     try:
         while True:
-            visa.register_people_for_dates(visa.read_available_dates())
-            driver.refresh()
-    except Exception:
-        print("error", Exception)
+            available_dates = visa.read_available_dates()
+            if available_dates:
+                for date in available_dates:
+                    for person in available_dates[date]:
+                        visa.go_to_select_date_page(person["phone"], person["email"])
+                        visa.send_register_message(bot, visa.register_person_for_date(person, date))
+            else:
+                visa.send_register_message(
+                    bot, "🔍 No dates. Waiting...")
+                time.sleep(timeout)
+                driver.refresh()
+    except Exception as e:
+        visa.send_register_message(bot, "❌ Register people error: {}".format(str(e)))
         register_people(timeout)
 
 register_people(config.TIMEOUT)
