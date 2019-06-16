@@ -38,6 +38,7 @@ def monitor_dates(timeout):
     except Exception as e:
         visa.send_monitoring_message(bot, "❌ Monitor dates error: {}".format(str(e)))
         time.sleep(timeout)
+        visa.send_monitoring_message(bot, "🔄 Retrying monitoring...")
         monitor_dates(timeout)
 
 
