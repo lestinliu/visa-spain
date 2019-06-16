@@ -1,17 +1,10 @@
 import subprocess
 
 import telebot
+from utils import config
 
 last_message = ""
 bot = telebot.TeleBot('803883229:AAHGFPQ1guQEZylgE0_IdErXrkUpfolhT-c')
-
-@bot.message_handler(commands=['help'])
-def start_message(message):
-    bot.send_message(message.chat.id, 'Available commands:')
-    bot.send_message(message.chat.id, '/start motinoring')
-    bot.send_message(message.chat.id, '/stop all')
-    bot.send_message(message.chat.id, '/register available people')
-    print("{}".format(message.chat.id))
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
@@ -40,5 +33,22 @@ def start_message(message):
         pass
     finally:
         subprocess.call("/usr/local/bin/python3.7 register_solo.py", shell=True)
+
+
+@bot.message_handler(content_types=['text'])
+def get_text_messages(message):
+    if "/timeout " in message.text:
+        print("timeout: {}".format(int(message.text.split()[1])))
+        config.TIMEOUT = int(message.text.split()[1])
+        bot.send_message(message.from_user.id, "Timeout is changed to {} sec".format(int(message.text.split()[1])))
+    elif message.text == "/help":
+        bot.send_message(message.from_user.id, "Available commands:\n"
+                                               "/start - to start monitoring dates\n"
+                                               "/stop - to stop all proceses\n"
+                                               "/register - to register available people\n"
+                                               "/timeout sec - to change retry timeout")
+    else:
+        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
+
 
 bot.polling()

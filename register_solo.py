@@ -52,13 +52,13 @@ def register_people(timeout):
                         visa.send_register_message(bot, visa.register_person_for_date(person, date))
             else:
                 visa.send_register_message(
-                    bot, "🔍 No dates. Waiting...")
+                    bot, "🔍 No dates. Waiting with timeout {} sec...".format(timeout))
                 time.sleep(timeout)
                 driver.refresh()
     except Exception as e:
         visa.send_register_message(bot, "❌ Register people error: {}".format(str(e)))
         time.sleep(timeout)
-        visa.send_monitoring_message(bot, "🔄 Retrying registering...")
+        visa.send_monitoring_message(bot, "🔄 Retrying registering with timeout {} sec...".format(timeout))
         register_people(timeout)
 
 register_people(config.TIMEOUT)

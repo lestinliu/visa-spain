@@ -30,7 +30,7 @@ def monitor_dates(timeout):
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
             if not available_dates:
-                visa.send_monitoring_message(bot, "🔍 No dates. Monitoring...")
+                visa.send_monitoring_message(bot, "🔍 No dates. Monitoring with timeout {} sec...".format(timeout))
                 time.sleep(timeout)
                 driver.refresh()
             else:
@@ -38,7 +38,7 @@ def monitor_dates(timeout):
     except Exception as e:
         visa.send_monitoring_message(bot, "❌ Monitor dates error: {}".format(str(e)))
         time.sleep(timeout)
-        visa.send_monitoring_message(bot, "🔄 Retrying monitoring...")
+        visa.send_monitoring_message(bot, "🔄 Retrying monitoring with timeout {} sec...".format(timeout))
         monitor_dates(timeout)
 
 
