@@ -68,11 +68,11 @@ class Visa(Basic):
         self.click_el(id="app_date")
         next_button_xpath = "//div[@class = 'datepicker-days']" \
                             "//th[@class = 'next' and not(@style = 'visibility: hidden;')]"
-        available_dates = []
+        available_dates = {}
         while True:
             nd = self.get_normal_dates()
             if nd:
-                available_dates.extend(nd)
+                available_dates.update(nd)
             if len(self.driver.find_elements_by_xpath(next_button_xpath)):
                 self.click_el(xpath=next_button_xpath)
             else:
@@ -95,6 +95,8 @@ class Visa(Basic):
         month_el = datetime.strptime(
             self.driver.find_element_by_xpath("//div[@class='datepicker-days']//th[@class='datepicker-switch']").text,
             '%B %Y')
+        print("date: ", date)
+        print("")
         for i in range(self.diff_month(date, month_el)):
             self.click_el(xpath="//div[@class = 'datepicker-days']//th[@class = 'next']")
         self.click_el(
@@ -306,7 +308,15 @@ class Visa(Basic):
                                 if not available_dates.get(date):
                                     available_dates[date] = []
                                 available_dates[date].append(person)
-                                dates[date] = dates[date].pop(0)
+                                print("dates: ", dates)
+                                print("date: ", date)
+                                if len(dates) > 1:
+                                    if len(dates[date]) > 1:
+                                        dates[date] = dates[date].pop(0)
+                                    else:
+                                        dates[date] = []
+                                else:
+                                    dates = {}
                                 break
                 else:
                     start_date = datetime.strptime(people[family][0]["start_date"], "%d/%m/%Y")
@@ -323,8 +333,6 @@ class Visa(Basic):
                                     time_list.pop(0)
                                 dates[date] = time_list
                                 break
-        with open('resources/dates.json', 'w') as fp:
-            json.dump(available_dates, fp)
         return available_dates
 
     def register_person_for_date(self, p, date):
@@ -348,11 +356,11 @@ class Visa(Basic):
             self.driver.execute_script('window.print();')
             return "🤑 id: {} is successfully registered. reg num: {}".format(p[id], reg_number.text)
         else:
-            if len(self.driver.find_elements_by_xpath("//p")):
-                error = self.driver.find_element_by_xpath("//p").text
+            if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):
+                error = self.driver.find_element_by_xpath("//div[contains(@style, 'color:#F00')]").text
             else:
                 error = "unknown error"
-            return "❌ id: {} is failed. Error message: {}".format(p[id], error)
+            return "❌ id: {} is failed. Error message: {}".format(p["id"], error)
 
     def send_monitoring_message(self, bot, message):
         if config.CURRENT_MONITORING_MESSAGE != message:

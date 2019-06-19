@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import time
 
@@ -49,7 +50,8 @@ def register_people(timeout):
                 for date in available_dates:
                     for person in available_dates[date]:
                         visa.go_to_select_date_page(person["phone"], person["email"])
-                        visa.send_register_message(bot, visa.register_person_for_date(person, date))
+                        visa.send_register_message(
+                            bot, visa.register_person_for_date(person, datetime.strptime(date, "%d/%m/%Y")))
             else:
                 visa.send_register_message(
                     bot, "🔍 No dates. Waiting...")
