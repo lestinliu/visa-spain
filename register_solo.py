@@ -59,6 +59,7 @@ def register_people(timeout):
                 driver.refresh()
     except Exception as e:
         time.sleep(timeout)
+        driver.close()
         visa.send_monitoring_message(bot, "🔄 Retrying registering with timeout {} sec...".format(timeout))
         register_people(timeout)
 
