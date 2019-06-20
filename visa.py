@@ -353,7 +353,7 @@ class Visa(Basic):
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                            p["id"], "status", date.strftime("%d/%m/%Y"))
             self.driver.execute_script("document.title = '{}'".format(reg_number))
-            self.driver.execute_script('window.print();')
+            self.driver.find_element_by_xpath('//*[contains(text(), "Распечатать")]').click()
             return "🤑 id: {} is successfully registered. reg num: {}".format(p[id], reg_number.text)
         else:
             if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):

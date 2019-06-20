@@ -21,7 +21,7 @@ appState = {
 }
 
 profile = {"printing.print_preview_sticky_settings.appState": json.dumps(appState),
-           'savefile.default_directory': "/Users/a.kardash/Drive",
+           'savefile.default_directory': "Drive",
            "download.prompt_for_download": False,
            "profile.default_content_setting_values.notifications": 2}
 chrome_options = webdriver.ChromeOptions()
@@ -58,7 +58,6 @@ def register_people(timeout):
                 time.sleep(timeout)
                 driver.refresh()
     except Exception as e:
-        visa.send_register_message(bot, "❌ Register people error: {}".format(str(e)))
         time.sleep(timeout)
         visa.send_monitoring_message(bot, "🔄 Retrying registering with timeout {} sec...".format(timeout))
         register_people(timeout)
