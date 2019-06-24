@@ -29,7 +29,7 @@ chrome_options.add_experimental_option('prefs', profile)
 chrome_options.add_argument('--kiosk-printing')
 # chrome_options.add_argument('--headless')
 driver = webdriver.Chrome(chrome_options=chrome_options)
-driver.implicitly_wait(1)
+driver.implicitly_wait(5)
 
 visa = Visa(driver)
 
@@ -50,6 +50,7 @@ def register_people(timeout):
                 for date in available_dates:
                     for person in available_dates[date]:
                         visa.go_to_select_date_page(person["phone"], person["email"])
+                        available_dates[date].pop(0)
                         visa.send_register_message(
                             bot, visa.register_person_for_date(person, datetime.strptime(date, "%d/%m/%Y")))
             else:
@@ -58,8 +59,10 @@ def register_people(timeout):
                 time.sleep(timeout)
                 driver.refresh()
     except Exception as e:
+        visa.send_monitoring_message(bot, "❌ Register people error: {}".format(str(e)))
         time.sleep(timeout)
         visa.send_monitoring_message(bot, "🔄 Retrying registering with timeout {} sec...".format(timeout))
         register_people(timeout)
+
 
 register_people(config.TIMEOUT)

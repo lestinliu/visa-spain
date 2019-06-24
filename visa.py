@@ -66,8 +66,7 @@ class Visa(Basic):
 
     def get_available_dates(self):
         self.click_el(id="app_date")
-        next_button_xpath = "//div[@class = 'datepicker-days']" \
-                            "//th[@class = 'next' and not(@style = 'visibility: hidden;')]"
+        next_button_xpath = "//div[@class = 'datepicker-days']//th[@class = 'next' and @style = 'visibility: visible;']"
         available_dates = {}
         while True:
             nd = self.get_normal_dates()
@@ -115,7 +114,8 @@ class Visa(Basic):
             for day in dates:
                 found_date = datetime.strptime(day + " " + found_month, '%d %B %Y')
                 result_dates[found_date.strftime("%d/%m/%Y")] = self.get_available_time(day)
-        print("RD:", result_dates)
+                self.click_el(id="app_date")
+        print("normal dates: ", result_dates)
         return result_dates
 
     def get_available_time(self, day):
@@ -296,6 +296,8 @@ class Visa(Basic):
 
     def collect_people_for_dates(self, dates, people):
         available_dates = {}
+        # people: {'0': [{'id': 8, ...}, {'id': 9, ...}], '6': [{'id': 13, ...}, {'id': 14, ...}]
+        # dates: {'26/06/2019': ['10:30 - 10:45', '11:45 - 12:00'], '01/07/2019': ['12:15 - 12:30', '12:45 - 13:00']}
         if people and dates:
             for family in people:
                 if family == "0":
@@ -308,11 +310,10 @@ class Visa(Basic):
                                 if not available_dates.get(date):
                                     available_dates[date] = []
                                 available_dates[date].append(person)
-                                print("dates: ", dates)
-                                print("date: ", date)
+                                print("collected_date: ", date)
                                 if len(dates) > 1:
                                     if len(dates[date]) > 1:
-                                        dates[date] = dates[date].pop(0)
+                                        del dates[date][0]
                                     else:
                                         dates[date] = []
                                 else:
@@ -325,13 +326,15 @@ class Visa(Basic):
                         current_date = datetime.strptime(date, "%d/%m/%Y")
                         if start_date <= current_date <= end_date:
                             time_list = dates[date]
-                            if len(time_list) >= len(family):  # if has enough time slots for family
+                            if len(time_list) >= len(people[family]):  # if has enough time slots for family
                                 if not available_dates.get(date):
                                     available_dates[date] = []
-                                for person in family:
+                                for person in people[family]:
                                     available_dates[date].append(person)
-                                    time_list.pop(0)
-                                dates[date] = time_list
+                                    if len(time_list) > 1:
+                                        del dates[date][0]
+                                    else:
+                                        dates[date] = []
                                 break
         return available_dates
 
@@ -353,13 +356,15 @@ class Visa(Basic):
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                            p["id"], "status", date.strftime("%d/%m/%Y"))
             self.driver.execute_script("document.title = '{}'".format(reg_number))
-            self.driver.find_element_by_xpath('//*[contains(text(), "Распечатать")]').click()
-            return "🤑 id: {} is successfully registered. reg num: {}".format(p[id], reg_number.text)
+            self.driver.execute_script('window.print();')
+            return "🤑 id: {} is successfully registered. reg num: {}".format(p["id"], reg_number)
         else:
             if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):
                 error = self.driver.find_element_by_xpath("//div[contains(@style, 'color:#F00')]").text
             else:
                 error = "unknown error"
+            self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
+                                           p["id"], "status", error)
             return "❌ id: {} is failed. Error message: {}".format(p["id"], error)
 
     def send_monitoring_message(self, bot, message):
