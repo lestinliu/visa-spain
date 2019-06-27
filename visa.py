@@ -72,10 +72,11 @@ class Visa(Basic):
             nd = self.get_normal_dates()
             if nd:
                 available_dates.update(nd)
-            if len(self.driver.find_elements_by_xpath(next_button_xpath)):
+            if self.driver.find_elements_by_xpath(next_button_xpath):
                 self.click_el(xpath=next_button_xpath)
             else:
                 break
+        print("available dates: ", available_dates)
         return available_dates
 
     def get_available_people(self):
@@ -113,29 +114,26 @@ class Visa(Basic):
                 dates.append(day.text)
             for day in dates:
                 found_date = datetime.strptime(day + " " + found_month, '%d %B %Y')
-                result_dates[found_date.strftime("%d/%m/%Y")] = self.get_available_time(day)
-                self.click_el(id="app_date")
+                result_dates[found_date.strftime("%d/%m/%Y")] = []
         print("normal dates: ", result_dates)
         return result_dates
 
-    def get_available_time(self, day):
+    def get_available_time(self, date):
+        self.driver.refresh()
         self.click_el(id="app_date")
-        time.sleep(2)
+        month_el = datetime.strptime(self.driver.find_element_by_xpath(
+            "//div[@class='datepicker-days']//th[@class='datepicker-switch']").text, '%B %Y')
+        for i in range(self.diff_month(date, month_el)):
+            self.click_el(xpath="//div[@class = 'datepicker-days']//th[@class = 'next']")
         self.click_el(
-            xpath="//div[@class='datepicker-days']//td[contains(@class, ' activeClass') and text() = '{}']".format(day))
+            xpath="//div[@class='datepicker-days']//td[contains(@class, ' activeClass') and text() = '{}']"
+                .format(date.day))
         times = self.driver.find_elements_by_xpath("//select[@id='app_time']/option")
         available_time = []
         for i in times:
             available_time.append(i.text)
         available_time.pop(0)
         return available_time
-
-    def check_available_times(self, available_dates):
-        available_times = available_dates
-        for month in available_dates.keys():
-            for day in available_dates[month]:
-                available_times[month][day] = self.get_available_time(day)
-        return available_times
 
     # format (02 8 2019)
     def fill_travel_date(self, date):
@@ -297,44 +295,46 @@ class Visa(Basic):
     def collect_people_for_dates(self, dates, people):
         available_dates = {}
         # people: {'0': [{'id': 8, ...}, {'id': 9, ...}], '6': [{'id': 13, ...}, {'id': 14, ...}]
-        # dates: {'26/06/2019': ['10:30 - 10:45', '11:45 - 12:00'], '01/07/2019': ['12:15 - 12:30', '12:45 - 13:00']}
+        # dates: {'26/06/2019': [], '01/07/2019': [], ...}
         if people and dates:
             for family in people:
                 if family == "0":
                     for person in people[family]:
                         start_date = datetime.strptime(person["start_date"], "%d/%m/%Y")
                         end_date = datetime.strptime(person["end_date"], "%d/%m/%Y")
-                        for date in dates:  # dates = {'17/06/2019': ['12-13', '13-14'], ...}
+                        for date in dates:
+                            print("date:", date)  # date = '17/06/2019'
                             current_date = datetime.strptime(date, "%d/%m/%Y")
                             if start_date <= current_date <= end_date:
+                                if not dates[date]:
+                                    dates[date] = self.get_available_time(current_date)
                                 if not available_dates.get(date):
                                     available_dates[date] = []
                                 available_dates[date].append(person)
                                 print("collected_date: ", date)
-                                if len(dates) > 1:
-                                    if len(dates[date]) > 1:
-                                        del dates[date][0]
-                                    else:
-                                        dates[date] = []
+
+                                if len(dates[date]) > 1:
+                                    del dates[date][0]
                                 else:
-                                    dates = {}
+                                    del dates[date]
                                 break
                 else:
                     start_date = datetime.strptime(people[family][0]["start_date"], "%d/%m/%Y")
                     end_date = datetime.strptime(people[family][0]["end_date"], "%d/%m/%Y")
-                    for date in dates:  # dates = {'17/06/2019': ['12-13', '13-14'], ...}
+                    for date in dates:  # date = '17/06/2019'
                         current_date = datetime.strptime(date, "%d/%m/%Y")
                         if start_date <= current_date <= end_date:
-                            time_list = dates[date]
-                            if len(time_list) >= len(people[family]):  # if has enough time slots for family
+                            if not dates[date]:
+                                dates[date] = self.get_available_time(current_date)
+                            if len(dates[date]) >= len(people[family]):  # if has enough time slots for family
                                 if not available_dates.get(date):
                                     available_dates[date] = []
                                 for person in people[family]:
                                     available_dates[date].append(person)
-                                    if len(time_list) > 1:
+                                    if len(dates[date]) > 1:
                                         del dates[date][0]
                                     else:
-                                        dates[date] = []
+                                        del dates[date]
                                 break
         return available_dates
 
@@ -349,6 +349,11 @@ class Visa(Basic):
         self.fill_captcha()
         self.submit_form()
         reg_element = self.driver.find_elements_by_xpath("//tbody/tr[4]/td[2]")
+        if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):
+            if "Please enter the correct image characters." in self.driver.find_element_by_xpath(
+                    "//div[contains(@style, 'color:#F00')]").text:
+                self.fill_captcha()
+                self.submit_form()
         if len(reg_element):
             reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),

@@ -47,7 +47,10 @@ def monitor_dates(timeout):
         while True:
             go_to_select_date_page()
             dates = visa.get_available_dates()
-            visa.send_monitoring_message(bot, "😃 Dates found: {}".format(dates))
+            str_dates = "😃 Available dates found:\n"
+            for date in dates:
+                str_dates += date + "; "
+            visa.send_monitoring_message(bot, str_dates)
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
             with open('resources/dates.json', 'w') as fp:
