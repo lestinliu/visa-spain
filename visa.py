@@ -76,7 +76,6 @@ class Visa(Basic):
                 self.click_el(xpath=next_button_xpath)
             else:
                 break
-        print("available dates: ", available_dates)
         return available_dates
 
     def get_available_people(self):
@@ -95,7 +94,6 @@ class Visa(Basic):
         month_el = datetime.strptime(
             self.driver.find_element_by_xpath("//div[@class='datepicker-days']//th[@class='datepicker-switch']").text,
             '%B %Y')
-        print("date: ", date)
         print("")
         for i in range(self.diff_month(date, month_el)):
             self.click_el(xpath="//div[@class = 'datepicker-days']//th[@class = 'next']")
@@ -115,7 +113,6 @@ class Visa(Basic):
             for day in dates:
                 found_date = datetime.strptime(day + " " + found_month, '%d %B %Y')
                 result_dates[found_date.strftime("%d/%m/%Y")] = []
-        print("normal dates: ", result_dates)
         return result_dates
 
     def get_available_time(self, date):
@@ -303,7 +300,6 @@ class Visa(Basic):
                         start_date = datetime.strptime(person["start_date"], "%d/%m/%Y")
                         end_date = datetime.strptime(person["end_date"], "%d/%m/%Y")
                         for date in dates:
-                            print("date:", date)  # date = '17/06/2019'
                             current_date = datetime.strptime(date, "%d/%m/%Y")
                             if start_date <= current_date <= end_date:
                                 if not dates[date]:
