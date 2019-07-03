@@ -22,7 +22,7 @@ appState = {
 }
 
 profile = {"printing.print_preview_sticky_settings.appState": json.dumps(appState),
-           'savefile.default_directory': "/Users/a.kardash/Drive",
+           'savefile.default_directory': "/Users/Shared/Drive/visa",
            "download.prompt_for_download": False,
            "profile.default_content_setting_values.notifications": 2}
 chrome_options = webdriver.ChromeOptions()
@@ -43,9 +43,9 @@ def go_to_select_date_page():
 
 
 def monitor_dates(timeout):
+    go_to_select_date_page()
     try:
         while True:
-            go_to_select_date_page()
             dates = visa.get_available_dates()
             str_dates = "😃 Available dates found:\n"
             for date in dates:
