@@ -34,23 +34,11 @@ driver.implicitly_wait(5)
 visa = Visa(driver)
 
 
-def go_to_select_date_page():
-    visa.open_page("https://blsspain-belarus.com/book_appointment.php")
-    visa.select_centre("Minsk", "Normal")
-    visa.enter_phone_and_email(config.PHONE, config.EMAIL)
-    visa.enter_wrong_code(config.EMAIL, config.PASSWORD)
-    visa.enter_code_from_email(config.EMAIL)  # b
-
-
 def monitor_dates(timeout):
-    go_to_select_date_page()
+    visa.go_to_select_date_page(config.PHONE, config.EMAIL)
     try:
         while True:
             dates = visa.get_available_dates()
-            str_dates = "😃 Available dates found:\n"
-            for date in dates:
-                str_dates += date + "; "
-            visa.send_monitoring_message(bot, str_dates)
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
             with open('resources/dates.json', 'w') as fp:

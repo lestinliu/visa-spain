@@ -24,6 +24,18 @@ def start_message(message):
     subprocess.call("pkill -f" + " register_solo.py", shell=True)
 
 
+@bot.message_handler(commands=['dates'])
+def start_message(message):
+    print("id: {}".format(message.chat.id))
+    try:
+        subprocess.call("pkill -f" + " print_dates.py", shell=True)
+    except:
+        pass
+    finally:
+        subprocess.call("/usr/local/bin/python3.7 print_dates.py", shell=True)
+
+
+
 @bot.message_handler(commands=['register'])
 def start_message(message):
     bot.send_message(message.chat.id, 'Registering people...')
