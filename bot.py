@@ -1,7 +1,7 @@
 import subprocess
 
 import telebot
-from utils import config
+import git
 
 last_message = ""
 bot = telebot.TeleBot('803883229:AAHGFPQ1guQEZylgE0_IdErXrkUpfolhT-c')
@@ -26,7 +26,8 @@ def start_message(message):
 
 @bot.message_handler(commands=['dates'])
 def start_message(message):
-    print("id: {}".format(message.chat.id))
+    g = git.cmd.Git("/Users/automation/Developer/visa-spain")
+    g.pull()
     try:
         subprocess.call("pkill -f" + " print_dates.py", shell=True)
     except:

@@ -34,19 +34,24 @@ driver.implicitly_wait(5)
 visa = Visa(driver)
 
 
-visa.go_to_select_date_page(config.PHONE, config.EMAIL)
-dates = visa.get_available_dates()
-if dates:
-    str_dates = "😃 Available dates found:\n"
-    month = 0
-    for date in dates:
-        d = datetime.strptime(date, "%d/%m/%Y")
-        if d.month != month:
-            month = d.month
-            str_dates += "\n[{}]: ".format(month)
-        str_dates += str(d.day) + ", "
-else:
-    str_dates = "❌ No dates"
-bot.send_message(-355604726, str_dates)
+def get_dates():
+    try:
+        visa.go_to_select_date_page(config.PHONE, config.EMAIL)
+        dates = visa.get_available_dates()
+        if dates:
+            str_dates = "😃 Достыпные даты:\n"
+            month = ""
+            for date in dates:
+                d = datetime.strptime(date, "%d/%m/%Y")
+                if d.month != month:
+                    month = d.month
+                    str_dates += "\n[{}]: ".format(month)
+                str_dates += str(d.day) + ", "
+        else:
+            str_dates = "❌ Нет дат"
+        bot.send_message(-1001497020962, str_dates)
+    except Exception as e:
+        bot.send_message(-1001497020962, "Ошибка: {}".format(str(e)))
 
+get_dates()
 driver.quit()
