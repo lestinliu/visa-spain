@@ -46,19 +46,5 @@ def start_message(message):
     finally:
         subprocess.call("/usr/local/bin/python3.7 register_solo.py", shell=True)
 
-@bot.message_handler(content_types=['text'])
-def get_text_messages(message):
-    if "timeout " in message.text:
-        config.TIMEOUT = int(message.split()[1])
-        bot.send_message(message.from_user.id, "Timeout is changed to {}".format(int(message.split()[1])))
-    elif message.text == "/help":
-        bot.send_message(message.from_user.id, "Available commands:\n"
-                                               "/start - to start monitoring dates\n"
-                                               "/stop - to stop all proceses\n"
-                                               "/register - to register available people\n"
-                                               "timeout sec - to change retry timeout")
-    else:
-        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
-
 
 bot.polling()
