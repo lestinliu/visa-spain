@@ -39,7 +39,7 @@ def get_dates():
         visa.go_to_select_date_page(config.PHONE, config.EMAIL)
         dates = visa.get_available_dates()
         if dates:
-            str_dates = "😃 Достыпные даты:\n"
+            str_dates = "😃 Достyпные даты:\n"
             month = ""
             for date in dates:
                 d = datetime.strptime(date, "%d/%m/%Y")
