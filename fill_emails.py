@@ -12,4 +12,4 @@ driver.implicitly_wait(1)
 
 visa = Visa(driver)
 
-visa.fill_emails()
+visa.update_emails()

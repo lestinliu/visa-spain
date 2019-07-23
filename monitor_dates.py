@@ -29,7 +29,7 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_experimental_option('prefs', profile)
 chrome_options.add_argument('--kiosk-printing')
 # chrome_options.add_argument('--headless')
-driver = webdriver.Chrome(chrome_options=chrome_options)
+driver = webdriver.Chrome(options=chrome_options)
 driver.implicitly_wait(5)
 visa = Visa(driver)
 
@@ -62,12 +62,13 @@ def monitor_dates(timeout):
 
 
 def register_people(available_dates):
+    visa.update_emails()
+    visa.fill_emails()
     error_message = ""
     for date in available_dates:
         try:
             for person in available_dates[date]:
                 visa.go_to_select_date_page(person["phone"], person["email"])
-                # need to delete date from dates.json
                 visa.send_register_message(
                     bot, visa.register_person_for_date(person, datetime.strptime(date, "%d/%m/%Y")))
         except Exception as e:
