@@ -4,7 +4,7 @@ from utils.basic import Basic
 class Person(Basic):
     def __init__(self, driver, id, type, last_name, first_name, passport, birth_date, passport_issued, passport_expired,
                  issued_by, phone: int, nationality, travel_date, start_date, end_date, family, status, script_comment,
-                 email):
+                 email, date_registered, vpn_location):
         super().__init__(driver)
         self.id = id
         self.type = type
@@ -24,3 +24,5 @@ class Person(Basic):
         self.status = status
         self.script_comment = script_comment
         self.email = email
+        self.date_registered = date_registered
+        self.vpn_location = vpn_location

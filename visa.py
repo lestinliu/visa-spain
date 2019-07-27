@@ -329,27 +329,28 @@ class Visa(Basic):
                         p["birth_date"],
                         p["passport_issued"], p["passport_expired"], p["issued_by"], p["phone"], p["nationality"],
                         p["travel_date"], p["start_date"], p["end_date"], p["family"], p["status"], p["script_comment"],
-                        p["email"])
+                        p["email"], p["date_registered"], p["vpn_location"])
         self.fill_appointment_date(date)
         self.fill_other_fields(person)
         self.fill_captcha()
+        self.enable_vpn(person.vpn_location)
         self.submit_form()
         reg_element = self.driver.find_elements_by_xpath("//tbody/tr[4]/td[2]")
         if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):
             if "Please enter the correct image characters." in self.driver.find_element_by_xpath(
                     "//div[contains(@style, 'color:#F00')]").text:
                 self.fill_captcha()
-                self.enable_vpn()
-                self.submit_form()
-                self.disable_vpn()
         if len(reg_element):
             reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
+            self.driver.execute_script("document.title = '{}'".format(reg_number))
+            self.driver.execute_script('window.print();')
+            self.disable_vpn()
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                            p["id"], "script_comment", reg_number)
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                            p["id"], "status", date.strftime("%d/%m/%Y"))
-            self.driver.execute_script("document.title = '{}'".format(reg_number))
-            self.driver.execute_script('window.print();')
+            self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
+                                           p["id"], "date_registered", datetime.now().strftime("%d/%m/%Y"))
             return "🤑 id: {} is successfully registered. reg num: {}".format(p["id"], reg_number)
         else:
             if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):
@@ -376,49 +377,43 @@ class Visa(Basic):
             except:
                 pass
 
-    def enable_vpn(self):
+
+    def enable_vpn(self, location):
         self.disable_vpn()
-        locations = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "vpn_locations")
-        for location in locations.get_all_records():
-            times = location["times"]
-            if times < config.MAX_EMAILS:
-                output = Popen(["expressvpn connect {}".format(location["location"])], stdout=PIPE)
-                response = output.communicate()
-                if "Connected to" in response:
-                    locations.update_acell("C{}".format(location["id"] + 1), datetime.now().strftime("%d/%m/%Y"))
-                    locations.update_acell("D{}".format(location["id"] + 1), times + 1)
-                    print("Successfully connecred to {}".format(location["location"]))
-                else:
-                    print("❌ Error connecting: {}".format(response))
-                    continue
+        curr_location = "expressvpn connect {}".format(location)
+        cmd = Popen(curr_location, stdout=PIPE, shell=True)
+        cmd.communicate()
 
     def disable_vpn(self):
-        output = Popen(["expressvpn disconnect"], stdout=PIPE)
-        response = output.communicate()
-        if "Disconnected" not in response:
-            print("Unable to disconnect. Error: {}".format(response))
+        cmd = Popen("expressvpn disconnect", stdout=PIPE, shell=True)
+        cmd.communicate()
 
     def update_emails(self):
         visa = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa")
         for person in visa.get_all_records():
             if person["email"] != "done" and "MHP" in person["script_comment"]:
-                time_between = datetime.now() - datetime.strptime(person["status"], "%d/%m/%Y")
+                time_between = datetime.now() - datetime.strptime(person["date_registered"], "%d/%m/%Y")
                 if time_between.days > config.MAX_EMAILS:
                     visa.update_acell("R{}".format(person["id"] + 1), "done")
         locations = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "vpn_locations")
         for location in locations.get_all_records():
-            print(location["id"])
             if location["date_used"] and location["times"] >= config.MAX_EMAILS:
                 time_between = datetime.now() - datetime.strptime(location["date_used"], "%d/%m/%Y")
                 if time_between.days > config.MAX_VPN_DAYS:
                     locations.update_acell("D{}".format(location["id"] + 1), "0")
+                    locations.update_acell("C{}".format(location["id"] + 1), datetime.now().strftime("%d/%m/%Y"))
 
     def fill_emails(self):
         accounts = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "accounts")
         visa = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa")
+        locations = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "vpn_locations")
         for person in visa.get_all_records():
             if not person["email"] and not person["status"]:
                 for account in accounts.get_all_records():
                     if account["used"] < config.MAX_EMAILS:
                         visa.update_acell("R{}".format(person["id"] + 1), account["email"])
+                        break
+                for location in locations.get_all_records():
+                    if location["times"] < config.MAX_EMAILS:
+                        visa.update_acell("T{}".format(person["id"] + 1), location["location"])
                         break

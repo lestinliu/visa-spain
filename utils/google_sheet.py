@@ -24,7 +24,8 @@ class GoogleSheets:
         "family": "O",
         "status": "P",
         "script_comment": "Q",
-        "email": "R"
+        "email": "R",
+        "date_registered": "S"
     }
 
     def authorize(self):

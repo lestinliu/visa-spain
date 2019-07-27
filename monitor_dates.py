@@ -35,6 +35,8 @@ visa = Visa(driver)
 
 
 def monitor_dates(timeout):
+    visa.update_emails()
+    visa.fill_emails()
     visa.go_to_select_date_page(config.PHONE, config.EMAIL)
     try:
         while True:
@@ -62,8 +64,6 @@ def monitor_dates(timeout):
 
 
 def register_people(available_dates):
-    visa.update_emails()
-    visa.fill_emails()
     error_message = ""
     for date in available_dates:
         try:
