@@ -407,7 +407,6 @@ class Visa(Basic):
                     visa.update_acell("R{}".format(person["id"] + 1), "done")
         locations = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "vpn_locations")
         for location in locations.get_all_records():
-            print(location["id"])
             if location["date_used"] and location["times"] >= config.MAX_EMAILS:
                 time_between = datetime.now() - datetime.strptime(location["date_used"], "%d/%m/%Y")
                 if time_between.days > config.MAX_VPN_DAYS:
