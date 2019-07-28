@@ -1,7 +1,6 @@
 import subprocess
 
 import telebot
-import git
 
 last_message = ""
 bot = telebot.TeleBot('803883229:AAHGFPQ1guQEZylgE0_IdErXrkUpfolhT-c')

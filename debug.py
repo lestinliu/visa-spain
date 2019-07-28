@@ -19,5 +19,5 @@ visa = gs.open_sheet(gs.authorize(), "Visa Spain", "visa")
 for person in visa.get_all_records():
     reg_num = person["script_comment"]
     if reg_num and "pdf" not in reg_num and "{}.pdf".format(reg_num) in links:
-        visa.update_acell("U{}".format(person["id"] + 1), links["{}.pdf".format(reg_num)])
+        visa.update_acell("Q{}".format(person["id"] + 1), links["{}.pdf".format(reg_num)])
 
