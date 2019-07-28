@@ -417,3 +417,4 @@ class Visa(Basic):
                     if location["times"] < config.MAX_EMAILS:
                         visa.update_acell("T{}".format(person["id"] + 1), location["location"])
                         break
+

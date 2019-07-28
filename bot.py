@@ -21,7 +21,6 @@ def start_message(message):
 def start_message(message):
     bot.send_message(message.chat.id, 'Motitoring stopped...')
     subprocess.call("pkill -f" + " monitor_dates.py", shell=True)
-    subprocess.call("pkill -f" + " register_solo.py", shell=True)
 
 
 @bot.message_handler(commands=['dates'])
@@ -34,16 +33,15 @@ def start_message(message):
         subprocess.call("/usr/local/bin/python3.7 print_dates.py", shell=True)
 
 
-
-@bot.message_handler(commands=['register'])
+@bot.message_handler(commands=['links'])
 def start_message(message):
-    bot.send_message(message.chat.id, 'Registering people...')
     try:
-        subprocess.call("pkill -f" + " register_solo.py", shell=True)
+        subprocess.call("pkill -f" + " create_links.py", shell=True)
     except:
         pass
     finally:
-        subprocess.call("/usr/local/bin/python3.7 register_solo.py", shell=True)
+        subprocess.call("/usr/local/bin/python3.7 create_links.py", shell=True)
+
 
 
 bot.polling()
