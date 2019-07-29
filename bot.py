@@ -1,6 +1,9 @@
 import subprocess
+import time
 
 import telebot
+from requests.packages.urllib3.exceptions import ReadTimeoutError
+from telebot.apihelper import ApiException
 
 last_message = ""
 bot = telebot.TeleBot('803883229:AAHGFPQ1guQEZylgE0_IdErXrkUpfolhT-c')
@@ -41,6 +44,9 @@ def start_message(message):
     finally:
         subprocess.call("/usr/local/bin/python3.7 create_links.py", shell=True)
 
-
-
-bot.polling()
+while True:
+    try:
+        bot.polling(none_stop=True)
+    except Exception as e:
+        print(e)
+        time.sleep(15)
