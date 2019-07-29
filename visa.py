@@ -340,6 +340,8 @@ class Visa(Basic):
             if "Please enter the correct image characters." in self.driver.find_element_by_xpath(
                     "//div[contains(@style, 'color:#F00')]").text:
                 self.fill_captcha()
+                self.enable_vpn(person.vpn_location)
+                self.submit_form()
         if len(reg_element):
             reg_number = self.driver.find_element_by_xpath("//tbody/tr[4]/td[2]").text.split(" - ")[1]
             self.driver.execute_script("document.title = '{}'".format(reg_number))
@@ -351,7 +353,7 @@ class Visa(Basic):
                                            p["id"], "status", date.strftime("%d/%m/%Y"))
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                            p["id"], "date_registered", datetime.now().strftime("%d/%m/%Y"))
-            return "🤑 id: {} is successfully registered. reg num: {}".format(p["id"], reg_number)
+            return "\n🤑 id: {} is successfully registered. reg num: {}".format(p["id"], reg_number)
         else:
             if len(self.driver.find_elements_by_xpath("//div[contains(@style, 'color:#F00')]")):
                 error = self.driver.find_element_by_xpath("//div[contains(@style, 'color:#F00')]").text
@@ -359,7 +361,7 @@ class Visa(Basic):
                 error = "unknown error"
             self.gs.update_visa_item_by_id(self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa"),
                                            p["id"], "status", error)
-            return "❌ id: {} is failed. Error message: {}".format(p["id"], error)
+            return "\n❌ id: {} is failed. Error message: {}".format(p["id"], error)
 
     def send_monitoring_message(self, bot, message):
         if config.CURRENT_MONITORING_MESSAGE != message:

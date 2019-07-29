@@ -1,4 +1,5 @@
 import json
+import subprocess
 import time
 from datetime import datetime
 
@@ -35,12 +36,13 @@ visa = Visa(driver)
 
 
 def monitor_dates(timeout):
+    visa.disable_vpn()
     visa.update_emails()
-    visa.fill_emails()
     visa.go_to_select_date_page(config.PHONE, config.EMAIL)
     try:
         while True:
             dates = visa.get_available_dates()
+            visa.fill_emails()
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
             with open('resources/dates.json', 'w') as fp:
@@ -55,6 +57,7 @@ def monitor_dates(timeout):
                         people_found += "{}: {} - {}\n".format(k, person["id"], person["passport"])
                 visa.send_monitoring_message(bot, people_found)
                 register_people(available_dates)
+                subprocess.call("/usr/local/bin/python3.7 create_links.py", shell=True)
                 time.sleep(timeout)
                 driver.back()
                 driver.refresh()
@@ -64,15 +67,17 @@ def monitor_dates(timeout):
 
 
 def register_people(available_dates):
+    success_message = ""
     error_message = ""
     for date in available_dates:
         try:
             for person in available_dates[date]:
                 visa.go_to_select_date_page(person["phone"], person["email"])
-                visa.send_register_message(
-                    bot, visa.register_person_for_date(person, datetime.strptime(date, "%d/%m/%Y")))
+                success_message += visa.register_person_for_date(person, datetime.strptime(date, "%d/%m/%Y"))
         except Exception as e:
             error_message += str(e)
+    time.sleep(60) # time for bot to recover after vpn change
+    visa.send_register_message(bot, success_message)
     if error_message:
         visa.send_register_message(bot, "Register errors: {}".format(error_message))
 
