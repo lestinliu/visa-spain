@@ -84,7 +84,7 @@ class Visa(Basic):
         available_people = {}
         for person in visa.get_all_records():
             if not person["script_comment"] and not person["status"]:
-                family = str(person["family"])
+                family = "0" if not person["family"] else str(person["family"])
                 if family not in available_people:
                     available_people[family] = []
                 available_people[family].append(person)
@@ -377,7 +377,6 @@ class Visa(Basic):
             except:
                 pass
 
-
     def enable_vpn(self, location):
         self.disable_vpn()
         curr_location = "expressvpn connect {}".format(location)
@@ -389,13 +388,28 @@ class Visa(Basic):
         cmd.communicate()
 
     def update_emails(self):
+        spain = self.gs.open_sheet(self.gs.authorize(), "spain", "visa")
         visa = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "visa")
+        locations = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "vpn_locations")
+        for person in spain.get_all_records():
+            if not person["reg_date"] and not person["reg_number"]:
+                if not visa.cell(person["id"] + 1, 1).value:
+                    if person["id"] and person["type"] and person["last_name"] and person["first_name"] \
+                            and person["passport"] and person["issued_by"] and person["phone"] \
+                            and datetime.strptime(person["birth_date"], "%d/%m/%Y") < datetime.now() \
+                            and datetime.strptime(person["passport_issued"], "%d/%m/%Y") < datetime.now() \
+                            and person["nationality"] in ("Belarus", "Russian Federation") \
+                            and datetime.strptime(person["passport_expired"], "%d/%m/%Y") > datetime.now() \
+                            and datetime.strptime(person["travel_date"], "%d/%m/%Y") > datetime.now() \
+                            and datetime.strptime(person["start_date"], "%d/%m/%Y") > datetime.now() \
+                            and datetime.strptime(person["end_date"], "%d/%m/%Y") > datetime.now():
+                        print(list(person.values()))
+                        visa.insert_row(list(person.values()), person["id"] + 1)
         for person in visa.get_all_records():
             if person["email"] != "done" and "MHP" in person["script_comment"]:
                 time_between = datetime.now() - datetime.strptime(person["date_registered"], "%d/%m/%Y")
                 if time_between.days > config.MAX_EMAILS:
                     visa.update_acell("R{}".format(person["id"] + 1), "done")
-        locations = self.gs.open_sheet(self.gs.authorize(), "Visa Spain", "vpn_locations")
         for location in locations.get_all_records():
             if location["date_used"] and location["times"] >= config.MAX_EMAILS:
                 time_between = datetime.now() - datetime.strptime(location["date_used"], "%d/%m/%Y")
@@ -417,4 +431,3 @@ class Visa(Basic):
                     if location["times"] < config.MAX_EMAILS:
                         visa.update_acell("T{}".format(person["id"] + 1), location["location"])
                         break
-
