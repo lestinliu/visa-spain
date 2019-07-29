@@ -405,7 +405,6 @@ class Visa(Basic):
                             and datetime.strptime(person["travel_date"], "%d/%m/%Y") > datetime.now() \
                             and datetime.strptime(person["start_date"], "%d/%m/%Y") > datetime.now() \
                             and datetime.strptime(person["end_date"], "%d/%m/%Y") > datetime.now():
-                        print(list(person.values()))
                         visa.insert_row(list(person.values()), person["id"] + 1)
         for person in visa.get_all_records():
             if person["email"] != "done" and "MHP" in person["script_comment"]:
