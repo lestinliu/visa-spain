@@ -15,7 +15,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Setup Chrome
-        run: brew install --cask chromedriver
+        run: |
+          brew tap homebrew/cask
+          brew cask install chromedriver
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
