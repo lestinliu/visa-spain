@@ -4,3 +4,4 @@ nord
 selenium==3.141.0
 antigate
 Pillow
+telebot
