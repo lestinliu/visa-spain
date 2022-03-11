@@ -42,8 +42,7 @@ def monitor_dates(timeout):
     try:
         while True:
             dates = visa.get_available_dates()
-            if dates:
-                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
+            bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
             visa.fill_emails()
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
