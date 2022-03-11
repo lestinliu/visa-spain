@@ -45,13 +45,15 @@ def monitor_dates(timeout):
         while True:
             dates = visa.get_available_dates()
             print("print('visa.go_to_select_date_page(config.PHONE, config.EMAIL)')")
-            bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
+            if dates:
+                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
             visa.fill_emails()
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
             with open('resources/dates.json', 'w') as fp:
                 json.dump(available_dates, fp)
             if not available_dates:
+                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'No available dates')
                 time.sleep(timeout)
                 driver.refresh()
             else:
