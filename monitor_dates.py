@@ -50,24 +50,23 @@ def monitor_dates(timeout):
                 bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
                 visa.fill_emails()
                 people = visa.get_available_people()
-                available_dates = visa.collect_people_for_dates(dates, people)
+                dates = visa.collect_people_for_dates(dates, people)
                 with open('resources/dates.json', 'w') as fp:
                     json.dump(available_dates, fp)
-                if available_dates:
+                if dates:
                     people_found = "😃 Ready to register:\n"
-                    for k, v in available_dates.items():
+                    for k, v in dates.items():
                         for person in v:
                             people_found += "{}: {} - {}\n".format(k, person["id"], person["passport"])
                     visa.send_monitoring_message(bot, people_found)
-                    register_people(available_dates)
+                    register_people(dates)
                     subprocess.call("/usr/local/bin/python3.9 create_links.py", shell=True)
-                    time.sleep(timeout)
                     driver.back()
-                    driver.refresh()
                 else:
                     bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'No available dates')
-                    time.sleep(timeout)
-                    driver.refresh()
+            else:
+                time.sleep(timeout)
+                driver.refresh()
     except Exception as e:
         print("Monitor error: {}".format(str(e)))
         monitor_dates(timeout)
