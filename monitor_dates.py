@@ -92,6 +92,7 @@ while True:
     try:
         monitor_dates(config.TIMEOUT)
     except WebDriverException:
+        bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png())
         time.sleep(config.TIMEOUT)
         pass
 
