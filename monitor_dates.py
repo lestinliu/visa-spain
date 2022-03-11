@@ -3,6 +3,7 @@ import subprocess
 import time
 from datetime import datetime
 
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from visa import Visa
@@ -38,10 +39,13 @@ visa = Visa(driver)
 def monitor_dates(timeout):
     # visa.disable_vpn()
     visa.update_emails()
+    print('visa.update_emails()')
     visa.go_to_select_date_page(config.PHONE, config.EMAIL)
+    print('visa.go_to_select_date_page(config.PHONE, config.EMAIL)')
     try:
         while True:
             dates = visa.get_available_dates()
+            print("print('visa.go_to_select_date_page(config.PHONE, config.EMAIL)')")
             bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
             visa.fill_emails()
             people = visa.get_available_people()
@@ -84,4 +88,10 @@ def register_people(available_dates):
 
 
 visa.send_monitoring_message(bot, "Checking available dates for people in spreadsheet ...")
-monitor_dates(config.TIMEOUT)
+while True:
+    try:
+        monitor_dates(config.TIMEOUT)
+    except WebDriverException:
+        time.sleep(config.TIMEOUT)
+        pass
+
