@@ -7,7 +7,7 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from visa import Visa
-from utils import config
+import utils
 import telebot
 
 bot = telebot.TeleBot('1275523107:AAF_5t_r80J55Pl-JcVeLcVVOsl7kadqAc4')
@@ -40,13 +40,13 @@ def monitor_dates(timeout):
     # visa.disable_vpn()
     visa.update_emails()
     print('visa.update_emails()')
-    visa.go_to_select_date_page(config.PHONE, config.EMAIL)
-    print('visa.go_to_select_date_page(config.PHONE, config.EMAIL)')
+    visa.go_to_select_date_page(utils.config.PHONE, utils.config.EMAIL)
+    print('visa.go_to_select_date_page(utils.config.PHONE, utils.config.EMAIL)')
     try:
         while True:
             dates = visa.get_available_dates()
-            print("print('visa.go_to_select_date_page(config.PHONE, config.EMAIL)')")
-            bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
+            print("print('visa.go_to_select_date_page(utils.config.PHONE, utils.config.EMAIL)')")
+            bot.send_photo(chat_id=utils.config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
             visa.fill_emails()
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
@@ -90,9 +90,9 @@ def register_people(available_dates):
 visa.send_monitoring_message(bot, "Checking available dates for people in spreadsheet ...")
 while True:
     try:
-        monitor_dates(config.TIMEOUT)
+        monitor_dates(utils.config.TIMEOUT)
     except WebDriverException:
-        bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png())
-        time.sleep(config.TIMEOUT)
+        bot.send_photo(chat_id=utils.config.CHAT_ID, photo=driver.get_screenshot_as_png())
+        time.sleep(utils.config.TIMEOUT)
         pass
 
