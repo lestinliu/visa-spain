@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+      - name: Run monitor
+        run: |
+          python monitor_dates.py
       - name: send custom message
         if: always()
         uses: appleboy/telegram-action@master
@@ -28,4 +31,4 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            github job is stopped
+            🐞 GITHUB JOB IS STOPPED 🐞
