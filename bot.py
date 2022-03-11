@@ -16,7 +16,7 @@ def start_message(message):
     except:
         pass
     finally:
-        subprocess.call("/usr/local/bin/python3.7 monitor_dates.py", shell=True)
+        subprocess.call("/usr/local/bin/python3.9 monitor_dates.py", shell=True)
 
 
 @bot.message_handler(commands=['stop'])
@@ -32,7 +32,7 @@ def start_message(message):
     except:
         pass
     finally:
-        subprocess.call("/usr/local/bin/python3.7 print_dates.py", shell=True)
+        subprocess.call("/usr/local/bin/python3.9 print_dates.py", shell=True)
 
 
 @bot.message_handler(commands=['links'])
@@ -42,7 +42,7 @@ def start_message(message):
     except:
         pass
     finally:
-        subprocess.call("/usr/local/bin/python3.7 create_links.py", shell=True)
+        subprocess.call("/usr/local/bin/python3.9 create_links.py", shell=True)
 
 while True:
     try:

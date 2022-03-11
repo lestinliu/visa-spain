@@ -36,11 +36,11 @@ class Visa(Basic):
         self.enter_message(email, id="email")
 
     def enter_wrong_code(self, username, password):
-        self.enter_message(self.random_with_n_digits(4), id="otp")
-        self.click_el(name="save")
+        # self.enter_message(self.random_with_n_digits(4), id="otp")
+        # self.click_el(xpath='//a[@onclick="sendOTP();"]')
         email = Email()
         email.make_seen(username, password)
-        self.click_el(id="verification_code")
+        # self.click_el(id="verification_code")
         time.sleep(3)
 
     # check mail
@@ -57,10 +57,11 @@ class Visa(Basic):
             self.get_code_from_email(email)
 
     def enter_code_from_email(self, email):
-        self.enter_message(self.get_code_from_email(email), id="otp")
-        self.click_el(name="save")
+        self.click_el(xpath='//a[@onclick="sendOTP();"]')
         time.sleep(1)  # wait for window loaded
+        self.enter_message(self.get_code_from_email(email), id="otp")
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        self.click_el(name="save")
         view = self.driver.find_element_by_xpath("//div[@class = 'row whiteBG paddingInBox black']")
         self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', view)
         self.click_el(name="agree")
@@ -103,7 +104,7 @@ class Visa(Basic):
         self.click_el(xpath="(//select[@id='app_time']/option)[2]")
 
     def get_normal_dates(self):
-        normal_dates_xpath = "//div[@class='datepicker-days']//td[@class = 'day activeClass']"
+        normal_dates_xpath = "//div[@class='datepicker-days']//td[not(contains(@class, 'disabled'))]"
         result_dates = {}
         dates = []
         if len(self.driver.find_elements_by_xpath(normal_dates_xpath)):

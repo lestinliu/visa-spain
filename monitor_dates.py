@@ -9,7 +9,7 @@ from visa import Visa
 from utils import config
 import telebot
 
-bot = telebot.TeleBot('803883229:AAHGFPQ1guQEZylgE0_IdErXrkUpfolhT-c')
+bot = telebot.TeleBot('1275523107:AAF_5t_r80J55Pl-JcVeLcVVOsl7kadqAc4')
 
 appState = {
     "recentDestinations": [
@@ -36,12 +36,14 @@ visa = Visa(driver)
 
 
 def monitor_dates(timeout):
-    visa.disable_vpn()
+    # visa.disable_vpn()
     visa.update_emails()
     visa.go_to_select_date_page(config.PHONE, config.EMAIL)
     try:
         while True:
             dates = visa.get_available_dates()
+            if dates:
+                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
             visa.fill_emails()
             people = visa.get_available_people()
             available_dates = visa.collect_people_for_dates(dates, people)
@@ -57,7 +59,7 @@ def monitor_dates(timeout):
                         people_found += "{}: {} - {}\n".format(k, person["id"], person["passport"])
                 visa.send_monitoring_message(bot, people_found)
                 register_people(available_dates)
-                subprocess.call("/usr/local/bin/python3.7 create_links.py", shell=True)
+                subprocess.call("/usr/local/bin/python3.9 create_links.py", shell=True)
                 time.sleep(timeout)
                 driver.back()
                 driver.refresh()
