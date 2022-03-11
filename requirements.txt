@@ -3,5 +3,5 @@ oauth2client
 nord
 selenium==3.141.0
 antigate
-telebot
+pyTelegramBotAPI
 Pillow
