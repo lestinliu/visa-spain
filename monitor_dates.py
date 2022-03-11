@@ -38,7 +38,7 @@ visa = Visa(driver)
 
 def monitor_dates(timeout):
     # visa.disable_vpn()
-    visa.update_emails()
+    # visa.update_emails()
     print('visa.update_emails()')
     visa.go_to_select_date_page(utils.config.PHONE, utils.config.EMAIL)
     print('visa.go_to_select_date_page(utils.config.PHONE, utils.config.EMAIL)')
