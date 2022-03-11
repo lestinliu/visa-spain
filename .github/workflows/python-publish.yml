@@ -6,6 +6,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Chrome
+        if: matrix.os == 'macOS-latest'
+        run: brew cask install google-chrome
       - uses: actions/checkout@v2
       - name: Cache requirements
         uses: actions/cache@v2
