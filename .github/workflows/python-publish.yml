@@ -16,6 +16,7 @@ jobs:
             ${{ runner.os }}-pip-
       - name: Setup Chrome
         run: |
+          brew tap homebrew/cask
           brew install chromedriver --cask
       - name: Set up Python
         uses: actions/setup-python@v2
