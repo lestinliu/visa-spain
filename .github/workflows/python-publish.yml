@@ -4,7 +4,7 @@ on:
   push:
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache requirements
@@ -16,8 +16,7 @@ jobs:
             ${{ runner.os }}-pip-
       - name: Setup Chrome
         run: |
-          brew tap homebrew/cask
-          brew install chromedriver --cask
+          brew install --cask chromedriver
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
