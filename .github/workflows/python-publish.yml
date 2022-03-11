@@ -15,7 +15,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Setup Chrome
-        if: matrix.os == 'macOS-latest'
         run: brew install --cask chromedriver
       - name: Set up Python
         uses: actions/setup-python@v2
