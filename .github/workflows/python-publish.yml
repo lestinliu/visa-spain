@@ -24,3 +24,11 @@ jobs:
       - name: Test with behave
         run: |
           python monitor_dates.py
+      - name: send custom message
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            github job is stopped
