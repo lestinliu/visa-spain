@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-      - name: Run monitor
-        run: |
-          python monitor_dates.py
       - name: send custom message
         if: always()
         uses: appleboy/telegram-action@master
