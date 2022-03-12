@@ -29,7 +29,7 @@ profile = {"printing.print_preview_sticky_settings.appState": json.dumps(appStat
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_experimental_option('prefs', profile)
 chrome_options.add_argument('--kiosk-printing')
-chrome_options.add_argument('--headless')
+# chrome_options.add_argument('--headless')
 driver = webdriver.Chrome(options=chrome_options)
 driver.implicitly_wait(5)
 visa = Visa(driver)
