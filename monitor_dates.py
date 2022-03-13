@@ -65,7 +65,7 @@ def monitor_dates(timeout):
                 else:
                     bot.send_photo(chat_id=-1001497020962, photo=driver.get_screenshot_as_png(), caption=f'No available dates')
             else:
-                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'No dates: {time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}')
+                bot.send_message(chat_id=config.CHAT_ID, text=f'No dates: {datetime.utcnow()}')
                 time.sleep(timeout)
                 driver.refresh()
     except Exception as e:
