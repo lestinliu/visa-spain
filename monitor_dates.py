@@ -47,7 +47,7 @@ def monitor_dates(timeout):
             print("print('visa.go_to_select_date_page(config.PHONE, config.EMAIL)')")
             available_dates = {}
             if dates:
-                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
+                bot.send_photo(chat_id=-1001497020962, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
                 visa.fill_emails()
                 people = visa.get_available_people()
                 dates = visa.collect_people_for_dates(dates, people)
@@ -63,8 +63,9 @@ def monitor_dates(timeout):
                     subprocess.call("/usr/local/bin/python3.9 create_links.py", shell=True)
                     driver.back()
                 else:
-                    bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'No available dates')
+                    bot.send_photo(chat_id=-1001497020962, photo=driver.get_screenshot_as_png(), caption=f'No available dates')
             else:
+                bot.send_photo(chat_id=config.CHAT_ID, photo=driver.get_screenshot_as_png(), caption=f'No dates: {time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}')
                 time.sleep(timeout)
                 driver.refresh()
     except Exception as e:
