@@ -48,6 +48,8 @@ def monitor_dates(timeout):
             available_dates = {}
             if dates:
                 bot.send_photo(chat_id=-1001497020962, photo=driver.get_screenshot_as_png(), caption=f'dates: {dates}')
+                for element in driver.find_elements_by_xpath("//div[@class='datepicker-days']//td[not(contains(@class, 'disabled'))]"):
+                    bot.send_message(chat_id=config.CHAT_ID, text=f"class: {element.get_attribute('class')}")
                 visa.fill_emails()
                 people = visa.get_available_people()
                 dates = visa.collect_people_for_dates(dates, people)
