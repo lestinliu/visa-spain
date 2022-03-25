@@ -5,3 +5,4 @@ selenium==3.141.0
 antigate
 pyTelegramBotAPI
 Pillow
+2captcha-python

@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 from subprocess import Popen, PIPE
 from datetime import datetime
 
@@ -12,6 +14,8 @@ import time
 from utils.basic import Basic
 from utils.google_sheet import GoogleSheets
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from twocaptcha import TwoCaptcha
 
 class Visa(Basic):
 
@@ -61,10 +65,28 @@ class Visa(Basic):
         time.sleep(1)  # wait for window loaded
         self.enter_message(self.get_code_from_email(email), id="otp")
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        sitekey = self.driver.find_element_by_xpath('//div[@class="h-captcha"]').get_attribute('data-sitekey')
+        self.solve_captcha(sitekey)
         self.click_el(name="save")
         view = self.driver.find_element_by_xpath("//div[@class = 'row whiteBG paddingInBox black']")
         self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', view)
         self.click_el(name="agree")
+
+    def solve_captcha(self, sitekey):
+        api_key = os.getenv('APIKEY_2CAPTCHA', '8a00f7c0d525e77ea27b8430ce1810f6')
+        solver = TwoCaptcha(api_key)
+        try:
+            result = solver.hcaptcha(
+                sitekey=sitekey,
+                url='https://blsspain-belarus.com/book_appointment.php',
+            )
+        except Exception as e:
+            sys.exit(e)
+        else:
+            element = self.driver.find_element_by_xpath('//textarea[contains(@id,"h-captcha-response-")]')
+            self.driver.execute_script("arguments[0].setAttribute('style', 'none')", element)
+            element.click()
+            element.send_keys(result['code'])
 
     def get_available_dates(self):
         self.click_el(id="app_date")
